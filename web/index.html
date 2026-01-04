@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerador de Nuvem de Palavras</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Gerador de Nuvem de Palavras</h1>
+            <p>Crie lindas nuvens de palavras personalizadas a partir do seu texto e formas.</p>
+        </header>
+
+        <main>
+            <div class="controls">
+                <form id="generator-form">
+                    <!-- Text Input -->
+                    <div class="form-group">
+                        <span class="label-title">1. Digite suas Palavras</span>
+                        <textarea id="text-input" name="text_input" placeholder="Cole ou digite seu texto aqui..." required></textarea>
+                    </div>
+
+                    <!-- Mask File Input -->
+                    <div class="form-group">
+                        <span class="label-title">2. Máscara (Forma)</span>
+                        <div class="file-input-wrapper">
+                            <input type="file" id="mask-file" name="mask_file" accept=".png" class="file-input" required>
+                            <label for="mask-file" class="file-label-btn">Escolher Imagem de Máscara (.png)</label>
+                        </div>
+                    </div>
+
+                    <!-- Font File Input -->
+                    <div class="form-group">
+                        <span class="label-title">3. Tipografia (Opcional)</span>
+                        <div class="file-input-wrapper">
+                            <input type="file" id="font-file" name="font_file" accept=".ttf,.otf" class="file-input">
+                            <label for="font-file" class="file-label-btn">Fonte Padrão</label>
+                        </div>
+                    </div>
+
+                    <!-- Settings -->
+                    <div class="form-group">
+                        <span class="label-title">4. Configurações</span>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
+                            <div>
+                                <label for="max-words" style="font-size: 0.8rem; color: #666;">Máx. Palavras</label>
+                                <input type="number" id="max-words" name="max_words" value="400" min="10" max="2000" class="input-number">
+                            </div>
+                            <div>
+                                <label for="min-font-size" style="font-size: 0.8rem; color: #666;">Tam. Mín. Fonte</label>
+                                <input type="number" id="min-font-size" name="min_font_size" value="10" min="4" max="100" class="input-number">
+                            </div>
+                            <div>
+                                <label for="max-font-size" style="font-size: 0.8rem; color: #666;">Tam. Máx. Fonte</label>
+                                <input type="number" id="max-font-size" name="max_font_size" placeholder="Auto" min="10" class="input-number">
+                            </div>
+                            <div>
+                                <label for="min-word-length" style="font-size: 0.8rem; color: #666;">Tam. Mín. Palavra</label>
+                                <input type="number" id="min-word-length" name="min_word_length" value="0" min="0" class="input-number">
+                            </div>
+                        </div>
+                        <div style="margin-top: 0.5rem;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.2rem;">
+                                <label for="vertical-ratio" style="font-size: 0.8rem; color: #666;">Palavras Verticais (%)</label>
+                                <span id="vertical-val" style="font-size: 0.8rem; color: #888;">40%</span>
+                            </div>
+                            <input type="range" id="vertical-ratio" name="vertical_ratio" min="0" max="100" value="40">
+                        </div>
+                    </div>
+
+                    <!-- Color Picker Button -->
+                    <div class="form-group" style="margin-top: 1rem;">
+                         <span class="label-title">5. Cor do Tema</span>
+                         <button type="button" id="open-color-modal" class="btn-secondary">
+                            <span id="current-color-dot" class="color-dot"></span>
+                            Selecionar Cor
+                         </button>
+                         <input type="hidden" id="selected-color-code" name="color_code" value="hsl(0, 100%, 30%)">
+                    </div>
+
+                    <div id="status-message"></div>
+                    <button type="submit" id="generate-btn" class="btn-primary">Gerar Nuvem</button>
+                </form>
+            </div>
+
+            <div class="preview">
+                <div id="image-container">
+                    <div class="placeholder">A visualização aparecerá aqui</div>
+                </div>
+                <a id="download-link" href="#" download="wordcloud.png" style="display: none;">Baixar Alta Resolução</a>
+            </div>
+        </main>
+    </div>
+
+    <!-- Color Modal -->
+    <div id="color-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2>Escolha uma Cor</h2>
+            
+            <div class="color-picker-container">
+                <label for="html5-color">Seletor Personalizado:</label>
+                <input type="color" id="html5-color" value="#ff0000" style="width: 100%; height: 50px; cursor: pointer;">
+            </div>
+
+            <div class="preset-colors">
+                <p>Cores Sugeridas:</p>
+                <div class="color-grid">
+                    <div class="color-swatch" data-color="hsl(0, 100%, 30%)" style="background-color: hsl(0, 100%, 30%);"></div>
+                    <div class="color-swatch" data-color="hsl(120, 100%, 25%)" style="background-color: hsl(120, 100%, 25%);"></div>
+                    <div class="color-swatch" data-color="hsl(240, 100%, 35%)" style="background-color: hsl(240, 100%, 35%);"></div>
+                    <div class="color-swatch" data-color="hsl(60, 100%, 30%)" style="background-color: hsl(60, 100%, 30%);"></div>
+                    <div class="color-swatch" data-color="hsl(300, 100%, 25%)" style="background-color: hsl(300, 100%, 25%);"></div>
+                    <div class="color-swatch" data-color="#333333" style="background-color: #333333;"></div>
+                </div>
+            </div>
+
+            <button type="button" id="confirm-color" class="btn-primary" style="margin-top: 1rem;">Confirmar Cor</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
