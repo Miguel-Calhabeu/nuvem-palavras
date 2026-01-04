@@ -136,32 +136,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: formData
             });
 
-            if (!response.ok) {
-                // Try to parse JSON error; fall back to plain text.
-                let msg = 'Falha ao gerar nuvem';
-                try {
-                    const data = await response.json();
-                    msg = data.error || msg;
-                } catch {
-                    try {
-                        msg = await response.text();
-                    } catch {
-                        // ignore
-                    }
-                }
-                throw new Error(msg);
-            }
+            const data = await response.json();
 
-            // Success: API returns the PNG directly
-            const blob = await response.blob();
-            const objectUrl = URL.createObjectURL(blob);
+            if (!response.ok) {
+                throw new Error(data.error || 'Falha ao gerar nuvem');
+            }
 
             // Success
             showStatus('Nuvem de palavras gerada com sucesso!', 'success');
             
             // Display image
             const img = document.createElement('img');
-            img.src = objectUrl;
+            img.src = data.image_url;
             img.alt = 'Nuvem de Palavras Gerada';
             
             // Wait for image to load before clearing placeholder
@@ -170,7 +156,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 imageContainer.appendChild(img);
                 
                 // Setup download link
-                downloadLink.href = objectUrl;
+                downloadLink.href = data.image_url;
                 downloadLink.style.display = 'block';
             };
 

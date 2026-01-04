@@ -3,36 +3,17 @@ import os
 import uuid
 from generate_cloud import create_cloud
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+app = Flask(__name__, static_folder='web', static_url_path='')
 
-# Serve the frontend from /web
-app = Flask(__name__, static_folder=os.path.join(BASE_DIR, 'web'), static_url_path='')
-
-# In serverless (Vercel), the filesystem is read-only except /tmp.
-TMP_DIR = os.environ.get('TMPDIR', '/tmp')
-UPLOAD_FOLDER = os.path.join(TMP_DIR, 'uploads')
-RESULTS_FOLDER = os.path.join(TMP_DIR, 'results')
+# Directories for uploads and results
+UPLOAD_FOLDER = 'uploads'
+RESULTS_FOLDER = 'results'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(RESULTS_FOLDER, exist_ok=True)
 
-# Default font path
-# On Vercel we can't assume a local venv path exists; matplotlib ships DejaVu fonts we can locate.
-def _default_font_path() -> str | None:
-    try:
-        import matplotlib
-
-        return os.path.join(
-            os.path.dirname(matplotlib.__file__),
-            'mpl-data',
-            'fonts',
-            'ttf',
-            'DejaVuSans.ttf',
-        )
-    except Exception:
-        return None
-
-
-DEFAULT_FONT_PATH = _default_font_path()
+# Default font path (update this to point to a valid font on your system if needed)
+# Using the one from the environment we saw earlier
+DEFAULT_FONT_PATH = "venv/lib/python3.13/site-packages/matplotlib/mpl-data/fonts/ttf/DejaVuSans.ttf"
 
 @app.route('/')
 def index():
@@ -101,8 +82,6 @@ def generate():
             with open(text_path, 'w', encoding='utf-8') as f:
                 f.write(text_input)
         else:
-            # text_file is guaranteed here because we validated earlier.
-            assert text_file is not None
             text_file.save(text_path)
 
         # Handle font file
@@ -112,9 +91,6 @@ def generate():
             uploaded_font_path = os.path.join(UPLOAD_FOLDER, f"{request_id}_{font_file.filename}")
             font_file.save(uploaded_font_path)
             font_path = uploaded_font_path
-
-        if not font_path:
-            return jsonify({'error': 'Fonte padrão não disponível no servidor. Envie uma fonte (.ttf/.otf).'}), 400
 
         # Generate cloud
         try:
@@ -130,7 +106,7 @@ def generate():
                 prefer_horizontal=prefer_horizontal
             )
 
-            # Save result (temporary)
+            # Save result
             result_filename = f"{request_id}_result.png"
             result_path = os.path.join(RESULTS_FOLDER, result_filename)
             wc.to_file(result_path)
@@ -141,8 +117,7 @@ def generate():
             if uploaded_font_path and os.path.exists(uploaded_font_path):
                 os.remove(uploaded_font_path)
 
-            # In serverless, returning the file directly is safer than relying on persisted /results.
-            return send_file(result_path, mimetype='image/png')
+            return jsonify({'image_url': f'/results/{result_filename}'})
 
         except Exception as e:
             # Clean up uploaded files (Generation Error case)
@@ -162,7 +137,6 @@ def generate():
 
 @app.route('/results/<filename>')
 def get_result(filename):
-    # Kept for compatibility, but note files live in /tmp and may disappear between invocations.
     return send_file(os.path.join(RESULTS_FOLDER, filename))
 
 if __name__ == '__main__':
